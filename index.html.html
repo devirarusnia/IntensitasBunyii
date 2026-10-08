@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LKPD WebAR - Intensitas Bunyi</title>
+<meta name="description" content="LKPD interaktif WebAR materi Intensitas Bunyi">
+<script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
+<script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
+<style>
+:root{
+  --navy:#172554;--blue:#2563eb;--cyan:#06b6d4;--purple:#7c3aed;
+  --pink:#ec4899;--orange:#f97316;--green:#16a34a;--yellow:#facc15;
+  --bg:#f6f8ff;--card:#fff;--muted:#64748b;--line:#e2e8f0;
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:Inter,Segoe UI,Arial,sans-serif;background:var(--bg);color:#172033}
+button,input,textarea{font:inherit}
+.app{display:grid;grid-template-columns:42% 58%;min-height:100vh}
+.left{padding:24px 28px 40px;overflow:auto;background:
+ radial-gradient(circle at 10% 0%,#dbeafe 0 12%,transparent 25%),
+ radial-gradient(circle at 100% 20%,#fce7f3 0 10%,transparent 24%),#f8fafc}
+.right{position:relative;background:#081225;min-height:100vh;display:flex;flex-direction:column}
+.header{display:flex;gap:14px;align-items:center;margin-bottom:18px}
+.logo{width:54px;height:54px;border-radius:17px;background:linear-gradient(135deg,#2563eb,#7c3aed);display:grid;place-items:center;color:white;font-size:27px;box-shadow:0 10px 24px #2563eb35}
+h1{font-size:26px;margin:0;color:var(--navy)}
+.subtitle{margin:4px 0 0;color:var(--muted);font-size:13px}
+.card{background:rgba(255,255,255,.96);border:1px solid var(--line);border-radius:20px;padding:18px;margin:12px 0;box-shadow:0 8px 28px #17255410}
+.card h2{font-size:18px;margin:0 0 12px;color:var(--navy)}
+.tag{display:inline-block;padding:5px 9px;border-radius:999px;font-size:11px;font-weight:800;margin-bottom:8px}
+.blue{background:#dbeafe;color:#1d4ed8}.pink{background:#fce7f3;color:#be185d}.green{background:#dcfce7;color:#15803d}.orange{background:#ffedd5;color:#c2410c}.purple{background:#ede9fe;color:#6d28d9}.yellow{background:#fef9c3;color:#a16207}
+label{display:block;font-size:12px;font-weight:700;margin:8px 0 5px;color:#334155}
+input,textarea{width:100%;border:1px solid #cbd5e1;border-radius:10px;padding:9px 11px;background:#fff;outline:none}
+input:focus,textarea:focus{border-color:#60a5fa;box-shadow:0 0 0 3px #60a5fa22}
+textarea{min-height:68px;resize:vertical}
+ul,ol{padding-left:20px;margin:7px 0}.compact li{margin:5px 0;font-size:13px;line-height:1.45}
+.goal{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}.goal div{padding:10px;border-radius:12px;background:#f8fafc;border-left:4px solid #60a5fa;font-size:12px}
+.formgrid{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.prompt{background:linear-gradient(135deg,#172554,#312e81);color:white;border-radius:18px;padding:16px;margin:12px 0}
+.prompt strong{font-size:16px}.prompt p{font-size:12px;line-height:1.55;margin:7px 0}
+.activity{border-left:5px solid var(--cyan);background:#ecfeff;padding:13px;border-radius:12px;margin:9px 0;font-size:13px;line-height:1.5}
+table{width:100%;border-collapse:collapse;font-size:12px;margin-top:8px}th,td{border:1px solid #cbd5e1;padding:7px;text-align:center}th{background:#e0f2fe}
+.footer-note{font-size:11px;color:#64748b;text-align:center;margin-top:18px}
+.right-head{position:absolute;z-index:5;top:14px;left:14px;right:14px;display:flex;justify-content:space-between;align-items:center;gap:10px;pointer-events:none}
+.ar-title{background:#ffffffee;color:var(--navy);border-radius:14px;padding:10px 13px;font-weight:900;box-shadow:0 7px 25px #0004;pointer-events:auto}
+.ar-title small{display:block;font-weight:500;color:#64748b;font-size:10px;margin-top:2px}
+.controls{display:flex;gap:7px;pointer-events:auto}.controls button{border:0;border-radius:10px;padding:9px 11px;font-weight:800;cursor:pointer;color:white;background:#2563eb}.controls button:nth-child(2){background:#7c3aed}
+#arbox{flex:1;position:relative;min-height:520px;overflow:hidden}
+#arbox a-scene{width:100%;height:100%}
+.hint{position:absolute;z-index:6;bottom:16px;left:50%;transform:translateX(-50%);width:min(92%,480px);background:#0f172eee;color:white;border:1px solid #ffffff22;border-radius:16px;padding:12px 14px;font-size:12px;line-height:1.45;backdrop-filter:blur(8px)}
+.hint b{color:#93c5fd}
+.sim{position:absolute;z-index:7;right:14px;bottom:15px;width:235px;background:#ffffffef;border-radius:16px;padding:12px;color:#172033;box-shadow:0 10px 30px #0004}
+.sim h3{margin:0 0 7px;font-size:13px}.sim .bar{height:12px;border-radius:999px;background:#e2e8f0;overflow:hidden}.sim .fill{height:100%;width:70%;background:linear-gradient(90deg,#22c55e,#facc15,#ef4444);transition:.3s}.sim p{font-size:11px;margin:7px 0}.sim input{padding:6px}.sim button{border:0;background:#172554;color:#fff;padding:7px 9px;border-radius:8px;font-size:11px;cursor:pointer}
+@media(max-width:900px){.app{grid-template-columns:1fr}.right{min-height:700px}.left{order:2}.right{order:1}.sim{display:none}.goal{grid-template-columns:1fr}.formgrid{grid-template-columns:1fr}}
+@media print{.right{display:none}.app{display:block}.left{padding:10px}.card{break-inside:avoid}}
+
+.intensity-illustration{background:linear-gradient(135deg,#eff6ff,#f5f3ff);border:1px solid #c7d2fe;border-radius:18px;padding:10px;margin:12px 0;overflow:hidden}
+.intensity-illustration svg{width:100%;height:auto;display:block}
+.experiment-box{background:linear-gradient(135deg,#fff7ed,#fff1f2);border:1px solid #fed7aa;border-radius:18px;padding:15px;margin:10px 0}
+.step-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:9px;margin-top:10px}
+.step{background:#fff;border-radius:13px;padding:10px;border:1px solid #e2e8f0;font-size:12px;line-height:1.45}
+.step b{display:block;color:#9a3412;margin-bottom:4px}
+.calc-box{background:#f0fdf4;border:1px solid #bbf7d0;border-radius:14px;padding:12px;margin-top:10px;font-size:12px;line-height:1.55}
+.result-box{background:#eef2ff;border:1px solid #c7d2fe;border-radius:14px;padding:12px;margin-top:10px}
+.result-box button{border:0;border-radius:9px;background:#4f46e5;color:#fff;padding:8px 10px;font-weight:700;cursor:pointer;margin:3px}
+@media(max-width:900px){.step-grid{grid-template-columns:1fr}}
+
+</style>
+</head>
+<body>
+<div class="app">
+
+<section class="left">
+  <div class="header">
+    <div class="logo">🔊</div>
+    <div><h1>LKPD Interaktif: Intensitas Bunyi</h1><div class="subtitle">Lembar Kerja Peserta Didik • WebAR + Eksperimen</div></div>
+  </div>
+
+  <div class="card">
+    <span class="tag blue">IDENTITAS PESERTA DIDIK</span>
+    <div class="formgrid">
+      <div><label>Nama</label><input id="nama" placeholder="Tulis nama"></div>
+      <div><label>Kelas</label><input id="kelas" placeholder="Contoh: XI IPA 1"></div>
+      <div><label>Kelompok</label><input id="kelompok" placeholder="Kelompok"></div>
+      <div><label>Tanggal</label><input id="tanggal" type="date"></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <span class="tag purple">TUJUAN PEMBELAJARAN</span>
+    <div class="goal">
+      <div>1. Menjelaskan pengertian intensitas bunyi.</div>
+      <div>2. Menentukan faktor yang memengaruhi intensitas bunyi.</div>
+      <div>3. Menghubungkan intensitas dengan jarak dari sumber bunyi.</div>
+      <div>4. Menggunakan persamaan intensitas bunyi untuk menyelesaikan masalah.</div>
+      <div>5. Melakukan pengamatan/percobaan sederhana dan menyajikan data.</div>
+      <div>6. Menarik kesimpulan berdasarkan hasil pengamatan.</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <span class="tag green">PETUNJUK PENGGUNAAN</span>
+    <ol class="compact">
+      <li>Isi identitas pada bagian atas.</li>
+      <li>Baca sekilas materi sebelum melakukan kegiatan.</li>
+      <li>Pada bagian WebAR di kanan, izinkan akses kamera.</li>
+      <li>Arahkan kamera ke <b>marker Hiro</b> untuk melihat visualisasi intensitas bunyi.</li>
+      <li>Lakukan percobaan secara berkelompok dan catat hasilnya pada tabel.</li>
+      <li>Jawab pertanyaan analisis menggunakan data yang diperoleh.</li>
+    </ol>
+  </div>
+
+  <div class="card">
+    <span class="tag orange">SEKILAS MATERI</span>
+    <p style="font-size:13px;line-height:1.6;margin:0">
+      <b>Intensitas bunyi (I)</b> adalah daya bunyi yang melewati setiap satuan luas yang tegak lurus terhadap arah rambat bunyi.
+      Secara sederhana, semakin besar energi bunyi yang diterima setiap satuan luas, semakin besar intensitasnya.
+    </p>
+    <div class="prompt">
+      <strong>Rumus penting</strong>
+      <p><b>I = P / A</b></p>
+      <p>Untuk sumber bunyi titik yang memancar ke segala arah:
+      <b>I = P / (4πr²)</b></p>
+      <p>Keterangan: I = intensitas (W/m²), P = daya sumber (W), A = luas permukaan (m²), r = jarak dari sumber (m).</p>
+    </div>
+    <p style="font-size:12px;color:#475569;margin:0">
+      Jika jarak diperbesar, luas penyebaran bunyi bertambah sehingga intensitas yang diterima pada suatu titik berkurang.
+    </p>
+<div class="intensity-illustration">
+  <svg viewBox="0 0 900 290" role="img" aria-label="Ilustrasi penyebaran bunyi dan hubungan jarak dengan intensitas">
+    <defs>
+      <linearGradient id="waveBlue" x1="0" x2="1">
+        <stop offset="0" stop-color="#2563eb"/><stop offset="1" stop-color="#06b6d4"/>
+      </linearGradient>
+      <linearGradient id="wavePink" x1="0" x2="1">
+        <stop offset="0" stop-color="#7c3aed"/><stop offset="1" stop-color="#ec4899"/>
+      </linearGradient>
+    </defs>
+    <rect x="0" y="0" width="900" height="290" rx="16" fill="#ffffff"/>
+    <text x="450" y="27" text-anchor="middle" font-size="20" font-weight="800" fill="#172554">Ilustrasi Intensitas Bunyi</text>
+    <!-- sumber -->
+    <rect x="55" y="103" width="82" height="82" rx="16" fill="#172554"/>
+    <circle cx="96" cy="144" r="28" fill="#0f172a" stroke="#60a5fa" stroke-width="6"/>
+    <circle cx="96" cy="144" r="10" fill="#22d3ee"/>
+    <text x="96" y="212" text-anchor="middle" font-size="14" font-weight="700" fill="#172554">Sumber bunyi</text>
+    <!-- gelombang rapat -->
+    <path d="M155 82 Q205 144 155 206" fill="none" stroke="url(#waveBlue)" stroke-width="7"/>
+    <path d="M180 64 Q250 144 180 224" fill="none" stroke="#38bdf8" stroke-width="6" opacity=".9"/>
+    <path d="M210 48 Q295 144 210 240" fill="none" stroke="#a78bfa" stroke-width="5" opacity=".8"/>
+    <!-- titik jarak -->
+    <line x1="96" y1="252" x2="330" y2="252" stroke="#334155" stroke-width="2"/>
+    <line x1="96" y1="245" x2="96" y2="259" stroke="#334155" stroke-width="2"/>
+    <line x1="330" y1="245" x2="330" y2="259" stroke="#334155" stroke-width="2"/>
+    <text x="213" y="276" text-anchor="middle" font-size="15" font-weight="700" fill="#334155">r kecil → intensitas lebih besar</text>
+    <!-- gelombang renggang -->
+    <path d="M420 55 Q505 144 420 233" fill="none" stroke="url(#wavePink)" stroke-width="5"/>
+    <path d="M510 34 Q620 144 510 254" fill="none" stroke="#c084fc" stroke-width="4" opacity=".75"/>
+    <path d="M625 18 Q755 144 625 270" fill="none" stroke="#f472b6" stroke-width="4" opacity=".6"/>
+    <circle cx="770" cy="144" r="12" fill="#f59e0b"/>
+    <text x="770" y="177" text-anchor="middle" font-size="14" font-weight="700" fill="#172554">Pengamat</text>
+    <line x1="96" y1="52" x2="770" y2="52" stroke="#64748b" stroke-width="2" stroke-dasharray="7 7"/>
+    <text x="430" y="45" text-anchor="middle" font-size="14" fill="#475569">r semakin besar → energi menyebar pada area yang semakin luas</text>
+    <rect x="655" y="210" width="205" height="47" rx="12" fill="#fef3c7"/>
+    <text x="757" y="231" text-anchor="middle" font-size="14" font-weight="800" fill="#92400e">I ∝ 1 / r²</text>
+    <text x="757" y="248" text-anchor="middle" font-size="11" fill="#92400e">jarak naik → intensitas turun</text>
+  </svg>
+</div>
+
+  </div>
+
+  <div class="card">
+    <span class="tag blue">KEGIATAN 1 — OBSERVASI WEBAR</span>
+    <div class="activity">
+      <b>Tujuan:</b> mengamati secara visual perubahan penyebaran bunyi terhadap jarak.
+      <br><b>Langkah:</b> aktifkan kamera → arahkan ke marker Hiro → amati gelombang/ring yang muncul dari sumber bunyi.
+      <br><b>Catat:</b> apa yang terjadi pada visualisasi ketika jarak pengamatan diperbesar?
+    </div>
+    <label>Hasil pengamatan</label>
+    <textarea placeholder="Tuliskan hasil pengamatanmu..."></textarea>
+  </div>
+
+
+  <div class="card">
+    <span class="tag pink">PERCOBAAN UTAMA — PENGARUH JARAK TERHADAP INTENSITAS BUNYI</span>
+    <div class="experiment-box">
+      <b>Rumusan masalah:</b> Bagaimana perubahan intensitas bunyi ketika jarak dari sumber bunyi diperbesar?
+      <br><br>
+      <b>Hipotesis:</b> Semakin jauh jarak dari sumber bunyi, semakin kecil intensitas bunyi yang diterima karena intensitas berbanding terbalik dengan kuadrat jarak.
+    </div>
+
+    <div class="step-grid">
+      <div class="step"><b>Alat & bahan</b>2 ponsel, satu sebagai sumber bunyi dan satu sebagai alat ukur tingkat bunyi/sound meter; meteran; ruangan relatif tenang.</div>
+      <div class="step"><b>Variabel</b>Bebas: jarak. Terikat: hasil pengukuran. Kontrol: sumber bunyi, volume, posisi ponsel, dan kondisi ruangan.</div>
+      <div class="step"><b>Keselamatan</b>Gunakan volume yang nyaman. Jangan menempelkan sumber bunyi atau ponsel ke telinga dan hindari suara yang sangat keras.</div>
+      <div class="step"><b>Catatan</b>Hasil aplikasi sound meter umumnya berupa tingkat bunyi (dB), bukan intensitas langsung. Gunakan data untuk melihat kecenderungan, lalu bandingkan dengan model I ∝ 1/r².</div>
+    </div>
+
+    <h3 style="font-size:14px;margin:15px 0 7px;color:#172554">Langkah kerja</h3>
+    <ol class="compact">
+      <li>Letakkan sumber bunyi pada posisi tetap dan atur volume pada tingkat yang nyaman.</li>
+      <li>Letakkan alat ukur pada arah yang sama dari sumber.</li>
+      <li>Ukur pada jarak <b>0,5 m; 1 m; 1,5 m; 2 m</b>. Tunggu pembacaan stabil lalu catat.</li>
+      <li>Ulangi pengukuran minimal 2 kali pada tiap jarak, kemudian ambil nilai rata-rata.</li>
+      <li>Bandingkan hasil pengamatan dengan hubungan teori <b>I = P/(4πr²)</b>.</li>
+    </ol>
+
+    <table>
+      <tr><th>Jarak r (m)</th><th>Pengukuran 1</th><th>Pengukuran 2</th><th>Rata-rata</th><th>Intensitas relatif teori (1/r²)</th></tr>
+      <tr><td>0,5</td><td><input></td><td><input></td><td><input></td><td>4,00</td></tr>
+      <tr><td>1,0</td><td><input></td><td><input></td><td><input></td><td>1,00</td></tr>
+      <tr><td>1,5</td><td><input></td><td><input></td><td><input></td><td>0,44</td></tr>
+      <tr><td>2,0</td><td><input></td><td><input></td><td><input></td><td>0,25</td></tr>
+    </table>
+
+    <div class="calc-box">
+      <b>Contoh perbandingan teori:</b><br>
+      Jika pada r = 1 m intensitas dianggap 100%, maka pada r = 2 m:
+      <b>I₂/I₁ = (r₁/r₂)² = (1/2)² = 1/4</b>.
+      Jadi intensitas relatif menjadi sekitar <b>25%</b>.
+    </div>
+
+    <label>Hasil pengamatan dan pola yang kamu temukan</label>
+    <textarea placeholder="Tuliskan pola perubahan hasil pengukuran ketika jarak diperbesar..."></textarea>
+  </div>
+
+  <div class="card">
+    <span class="tag pink">KEGIATAN 2 — PERCOBAAN INTENSITAS BUNYI</span>
+    <div class="activity">
+      <b>Alat:</b> 1 ponsel sebagai sumber bunyi, 1 ponsel/aplikasi pengukur tingkat bunyi, meteran, dan ruangan yang relatif tenang.
+      <br><b>Variabel bebas:</b> jarak sumber bunyi. <b>Variabel terikat:</b> hasil pengukuran bunyi. <b>Variabel kontrol:</b> sumber dan pengaturan bunyi.
+      <br><b>Keselamatan:</b> gunakan tingkat bunyi yang nyaman; jangan menggunakan suara yang terlalu keras atau terlalu dekat dengan telinga.
+    </div>
+    <table>
+      <tr><th>Jarak r (m)</th><th>Hasil pengukuran</th><th>Pengamatan</th></tr>
+      <tr><td>0,5</td><td><input placeholder="isi"></td><td><input placeholder="isi"></td></tr>
+      <tr><td>1,0</td><td><input placeholder="isi"></td><td><input placeholder="isi"></td></tr>
+      <tr><td>1,5</td><td><input placeholder="isi"></td><td><input placeholder="isi"></td></tr>
+      <tr><td>2,0</td><td><input placeholder="isi"></td><td><input placeholder="isi"></td></tr>
+    </table>
+    <label>Prediksi sebelum percobaan</label>
+    <textarea placeholder="Bagaimana perubahan intensitas ketika jarak diperbesar?"></textarea>
+  </div>
+
+  <div class="card">
+    <span class="tag yellow">KEGIATAN 3 — TUGAS ANALISIS</span>
+    <ol class="compact">
+      <li>Gunakan data percobaan untuk menjelaskan hubungan jarak dan intensitas bunyi.</li>
+      <li>Jika jarak sumber menjadi 2 kali lebih jauh, bagaimana kecenderungan intensitas menurut <b>I ∝ 1/r²</b>?</li>
+      <li>Jelaskan mengapa bunyi dari sumber yang sama dapat terasa lebih lemah ketika diamati dari tempat yang lebih jauh.</li>
+      <li>Sebuah sumber memiliki daya 2 W dan diamati pada jarak 2 m. Hitung intensitasnya dengan <b>I = P/(4πr²)</b>.</li>
+      <li>Bandingkan hasil teori dengan hasil percobaan. Apakah sama persis? Jelaskan kemungkinan penyebab perbedaannya.</li>
+    </ol>
+    <label>Kesimpulan</label>
+    <textarea placeholder="Tuliskan kesimpulan berdasarkan data dan pembahasan..."></textarea>
+  </div>
+
+  <div class="card">
+    <span class="tag purple">REFLEKSI</span>
+    <label>Hal yang paling saya pahami</label><textarea></textarea>
+    <label>Hal yang masih membingungkan</label><textarea></textarea>
+  </div>
+
+  <div class="footer-note">LKPD dapat dicetak dari menu browser (Ctrl/Cmd + P). Bagian WebAR digunakan pada perangkat yang mendukung kamera.</div>
+</section>
+
+<section class="right">
+  <div class="right-head">
+    <div class="ar-title">🔊 WebAR Intensitas Bunyi<small>Arahkan kamera ke marker Hiro</small></div>
+    <div class="controls">
+      <button onclick="toggleAR()">AR ON/OFF</button>
+      <button onclick="resetAR()">Reset</button>
+    </div>
+  </div>
+  <div id="arbox">
+    <a-scene id="scene" embedded vr-mode-ui="enabled:false" renderer="antialias:true; alpha:true"
+      arjs="sourceType:webcam; debugUIEnabled:false; detectionMode:mono_and_matrix; matrixCodeType:3x3"
+      loading-screen="enabled:false">
+      <a-marker preset="hiro" id="marker">
+        <a-entity position="0 0 0">
+          <!-- speaker -->
+          <a-cylinder position="0 0.65 0" radius="0.55" height="0.18" rotation="90 0 0"
+             color="#172554"></a-cylinder>
+          <a-cylinder position="0 0.68 0.02" radius="0.34" height="0.12" rotation="90 0 0"
+             color="#0f172a"></a-cylinder>
+          <a-ring position="0 0.75 0.04" rotation="90 0 0" radius-inner="0.12" radius-outer="0.28"
+             color="#60a5fa" animation="property:scale; from:1 1 1; to:1.65 1.65 1.65; dur:1000; dir:alternate; loop:true"></a-ring>
+          <!-- sound wave rings -->
+          <a-ring position="0 0.85 0.06" rotation="90 0 0" radius-inner="0.38" radius-outer="0.44"
+             color="#22d3ee" opacity=".9"
+             animation="property:scale; from:.8 .8 .8; to:2.8 2.8 2.8; dur:1800; loop:true"></a-ring>
+          <a-ring position="0 0.87 0.06" rotation="90 0 0" radius-inner="0.38" radius-outer="0.43"
+             color="#a78bfa" opacity=".8"
+             animation="property:scale; from:.5 .5 .5; to:2.2 2.2 2.2; dur:1800; delay:600; loop:true"></a-ring>
+          <a-ring position="0 0.89 0.06" rotation="90 0 0" radius-inner="0.38" radius-outer="0.42"
+             color="#f472b6" opacity=".75"
+             animation="property:scale; from:.4 .4 .4; to:1.8 1.8 1.8; dur:1800; delay:1200; loop:true"></a-ring>
+          <a-text value="INTENSITAS BUNYI" align="center" color="#ffffff" width="3.6" position="0 1.8 0"></a-text>
+          <a-text value="semakin jauh → intensitas cenderung turun" align="center" color="#93c5fd" width="3" position="0 1.45 0"></a-text>
+        </a-entity>
+      </a-marker>
+      <a-entity camera></a-entity>
+    </a-scene>
+
+    <div class="hint" id="hint"><b>Langkah WebAR:</b> izinkan kamera → arahkan kamera ke marker <b>Hiro</b>. Jika marker belum tersedia, gunakan simulasi di bawah pada halaman ini.</div>
+    <div class="sim">
+      <h3>Simulasi cepat: jarak sumber</h3>
+      <p>Jarak: <b><span id="distVal">1.0</span> m</b></p>
+      <input id="dist" type="range" min=".5" max="5" step=".5" value="1" oninput="updateSim()">
+      <div class="bar"><div class="fill" id="fill"></div></div>
+      <p>Intensitas relatif: <b id="rel">100%</b></p>
+      <button onclick="setDist(0.5)">0,5 m</button>
+      <button onclick="setDist(1)">1 m</button>
+      <button onclick="setDist(2)">2 m</button>
+      <button onclick="setDist(4)">4 m</button>
+    </div>
+  </div>
+</section>
+</div>
+
+<script>
+const scene=document.getElementById('scene');
+function updateSim(){
+  const r=parseFloat(document.getElementById('dist').value);
+  const rel=100/(r*r);
+  document.getElementById('distVal').textContent=r.toFixed(1);
+  document.getElementById('rel').textContent=(Math.min(rel,100)).toFixed(1)+'%';
+  document.getElementById('fill').style.width=Math.min(rel,100)+'%';
+}
+function setDist(v){document.getElementById('dist').value=v;updateSim();}
+function toggleAR(){
+  const box=document.getElementById('arbox');
+  const hint=document.getElementById('hint');
+  const hidden=scene.style.display==='none';
+  scene.style.display=hidden?'block':'none';
+  hint.innerHTML=hidden?'<b>WebAR aktif:</b> izinkan kamera lalu arahkan ke marker Hiro.':'<b>WebAR dimatikan.</b> Aktifkan lagi dengan tombol AR ON/OFF.';
+}
+function resetAR(){scene.style.display='block';document.getElementById('hint').innerHTML='<b>Langkah WebAR:</b> izinkan kamera → arahkan kamera ke marker <b>Hiro</b>. Jika marker belum tersedia, gunakan simulasi di bawah pada halaman ini.';updateSim();}
+document.getElementById('tanggal').valueAsDate=new Date();
+updateSim();
+</script>
+</body>
+</html>
